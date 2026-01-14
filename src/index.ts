@@ -22,5 +22,13 @@ export {
   maskLogEntry,
   maskLogEntries
 } from "./middleware/maskMiddleware";
+export type { LogEntry } from "./middleware/maskMiddleware";
+
+// Export correlation ID utilities
+export {
+  CorrelatedLogger,
+  generateCorrelationId,
+  createCorrelatedLogger
+} from "./correlation";
 
 export default { getLogger };

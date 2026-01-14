@@ -25,6 +25,10 @@ export interface Logger {
   time: (message: string, ...data: any[]) => TimeLogger;
   get: (...additionalComponents: string[]) => Logger;
   destroy: () => void;
+  
+  // Optional correlation ID support (implemented by CorrelatedLogger)
+  withCorrelationId?: (id: string) => Logger;
+  getCorrelationId?: () => string;
 }
 
 export const createLogger = (
