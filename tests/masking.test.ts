@@ -758,6 +758,11 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKB
       expect(defaultMaskingConfig.maskBase64Blobs).toBe(true);
       expect(defaultMaskingConfig.maskJWTs).toBe(true);
       expect(defaultMaskingConfig.maxDepth).toBe(8);
+      // New security-focused defaults
+      expect(defaultMaskingConfig.maskApiKeys).toBe(true);
+      expect(defaultMaskingConfig.maskBearerTokens).toBe(true);
+      expect(defaultMaskingConfig.maskPasswords).toBe(true);
+      expect(defaultMaskingConfig.maskGenericSecrets).toBe(true);
     });
 
     it("should be immutable", () => {
@@ -767,6 +772,318 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKB
       // Should not affect the original
       expect(defaultMaskingConfig.enabled).toBe(false);
       expect(config.enabled).toBe(true);
+    });
+  });
+
+  describe("API Key Masking", () => {
+    describe("OpenAI Keys", () => {
+      it("should mask OpenAI API keys (sk-...)", () => {
+        const openaiKey = "sk-abc123def456ghi789jkl012mno345pqr678";
+        expect(maskString(openaiKey)).toBe("****");
+      });
+
+      it("should mask OpenAI project keys (sk-proj-...)", () => {
+        const projectKey = "sk-proj-abc123def456ghi789jkl012mno345pqr678";
+        expect(maskString(projectKey)).toBe("****");
+      });
+
+      it("should mask OpenAI keys in context", () => {
+        const message = "Using API key sk-abc123def456ghi789jkl012mno345pqr678 for request";
+        expect(maskString(message)).toBe("Using API key **** for request");
+      });
+    });
+
+    describe("Anthropic Keys", () => {
+      it("should mask Anthropic API keys (sk-ant-...)", () => {
+        const anthropicKey = "sk-ant-abc123def456ghi789jkl012mno345pqr678";
+        expect(maskString(anthropicKey)).toBe("****");
+      });
+
+      it("should mask Anthropic keys in context", () => {
+        const message = "Anthropic key: sk-ant-api03-abc123_def456";
+        expect(maskString(message)).toBe("Anthropic key: ****");
+      });
+    });
+
+    describe("AWS Keys", () => {
+      it("should mask AWS Access Key IDs", () => {
+        const awsKey = "AKIAIOSFODNN7EXAMPLE";
+        expect(maskString(awsKey)).toBe("****");
+      });
+
+      it("should mask AWS keys in context", () => {
+        const message = "AWS Access Key: AKIAIOSFODNN7EXAMPLE";
+        expect(maskString(message)).toBe("AWS Access Key: ****");
+      });
+    });
+
+    describe("GitHub Tokens", () => {
+      it("should mask GitHub personal access tokens (ghp_...)", () => {
+        const ghpToken = "ghp_abcdefghijklmnopqrstuvwxyz0123456789";
+        expect(maskString(ghpToken)).toBe("****");
+      });
+
+      it("should mask GitHub OAuth tokens (gho_...)", () => {
+        const ghoToken = "gho_abcdefghijklmnopqrstuvwxyz0123456789";
+        expect(maskString(ghoToken)).toBe("****");
+      });
+
+      it("should mask GitHub server-to-server tokens (ghs_...)", () => {
+        const ghsToken = "ghs_abcdefghijklmnopqrstuvwxyz0123456789";
+        expect(maskString(ghsToken)).toBe("****");
+      });
+
+      it("should mask GitHub user-to-server tokens (ghu_...)", () => {
+        const ghuToken = "ghu_abcdefghijklmnopqrstuvwxyz0123456789";
+        expect(maskString(ghuToken)).toBe("****");
+      });
+
+      it("should mask GitHub tokens in context", () => {
+        // Note: "token:" gets matched by generic secret pattern, so we test without it
+        const message = "Clone with ghp_abcdefghijklmnopqrstuvwxyz0123456789";
+        expect(maskString(message)).toBe("Clone with ****");
+      });
+    });
+
+    describe("GitLab Tokens", () => {
+      it("should mask GitLab personal access tokens (glpat-...)", () => {
+        // GitLab tokens need at least 20 chars after glpat-
+        const gitlabToken = "glpat-abc123def456ghi789jk";
+        expect(maskString(gitlabToken)).toBe("****");
+      });
+
+      it("should mask GitLab tokens in context", () => {
+        const message = "GitLab PAT: glpat-abc123def456ghi789jk";
+        expect(maskString(message)).toBe("GitLab PAT: ****");
+      });
+    });
+
+    describe("Slack Tokens", () => {
+      it("should mask Slack bot tokens (xoxb-...)", () => {
+        const slackBotToken = "xoxb-123456789012-1234567890123-abcdefghijklmnopqrstuvwx";
+        expect(maskString(slackBotToken)).toBe("****");
+      });
+
+      it("should mask Slack app tokens (xoxa-...)", () => {
+        const slackAppToken = "xoxa-123456789012-1234567890123-abcdefghijklmnopqrstuvwx";
+        expect(maskString(slackAppToken)).toBe("****");
+      });
+
+      it("should mask Slack user tokens (xoxp-...)", () => {
+        const slackUserToken = "xoxp-123456789012-1234567890123-abcdefghijklmnopqrstuvwx";
+        expect(maskString(slackUserToken)).toBe("****");
+      });
+
+      it("should mask Slack tokens in context", () => {
+        const message = "Slack webhook using xoxb-123456789012-1234567890123-abcdef";
+        expect(maskString(message)).toBe("Slack webhook using ****");
+      });
+    });
+
+    describe("Google Cloud API Keys", () => {
+      it("should mask Google Cloud API keys (AIza...)", () => {
+        const googleKey = "AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe";
+        expect(maskString(googleKey)).toBe("****");
+      });
+
+      it("should mask Google keys in context", () => {
+        const message = "Google Maps API: AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3namBGewQe";
+        expect(maskString(message)).toBe("Google Maps API: ****");
+      });
+    });
+
+    describe("Bearer Tokens", () => {
+      it("should mask Bearer tokens", () => {
+        const bearerToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+        expect(maskString(bearerToken)).toBe("****");
+      });
+
+      it("should mask Bearer tokens case-insensitively", () => {
+        const bearerToken = "BEARER mytoken123";
+        expect(maskString(bearerToken)).toBe("****");
+      });
+
+      it("should mask Bearer tokens in Authorization header context", () => {
+        const message = "Authorization: Bearer abc123.def456.ghi789";
+        expect(maskString(message)).toBe("Authorization: ****");
+      });
+    });
+
+    describe("Password Patterns", () => {
+      it("should mask password=value patterns", () => {
+        const password = "password=mysecretpass123";
+        expect(maskString(password)).toBe("****");
+      });
+
+      it("should mask password:value patterns", () => {
+        // Pattern matches up to whitespace or quote, leaving trailing quote
+        const password = 'password: "mysecretpass123"';
+        expect(maskString(password)).toBe('****"');
+      });
+
+      it("should mask password with quotes", () => {
+        // Pattern matches up to whitespace or quote, leaving trailing quote
+        const password = "password='secretValue'";
+        expect(maskString(password)).toBe("****'");
+      });
+
+      it("should mask password in simple format", () => {
+        const password = "password=secret123";
+        expect(maskString(password)).toBe("****");
+      });
+    });
+
+    describe("Generic Secret Patterns", () => {
+      it("should mask api_key=value patterns", () => {
+        const apiKey = "api_key=abc123def456";
+        expect(maskString(apiKey)).toBe("****");
+      });
+
+      it("should mask api-key=value patterns", () => {
+        const apiKey = "api-key=abc123def456";
+        expect(maskString(apiKey)).toBe("****");
+      });
+
+      it("should mask apikey=value patterns", () => {
+        const apiKey = "apikey=abc123def456";
+        expect(maskString(apiKey)).toBe("****");
+      });
+
+      it("should mask secret=value patterns", () => {
+        const secret = "secret=mysupersecret";
+        expect(maskString(secret)).toBe("****");
+      });
+
+      it("should mask token=value patterns", () => {
+        const token = "token=abc123xyz789";
+        expect(maskString(token)).toBe("****");
+      });
+
+      it("should mask secrets in config-like context", () => {
+        const config = "Config: api_key=abc123 secret=xyz789";
+        expect(maskString(config)).toBe("Config: **** ****");
+      });
+    });
+
+    describe("API Key Masking with Config", () => {
+      it("should mask API keys when maskApiKeys is true", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskApiKeys: true,
+        };
+        const openaiKey = "sk-abc123def456ghi789jkl012mno345pqr678";
+        expect(maskWithConfig(openaiKey, config)).toBe("****");
+      });
+
+      it("should not mask API keys when maskApiKeys is false", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskApiKeys: false,
+        };
+        const openaiKey = "sk-abc123def456ghi789jkl012mno345pqr678";
+        expect(maskWithConfig(openaiKey, config)).toBe(openaiKey);
+      });
+
+      it("should mask Bearer tokens when maskBearerTokens is true", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskBearerTokens: true,
+        };
+        const bearerToken = "Bearer mytoken123";
+        expect(maskWithConfig(bearerToken, config)).toBe("****");
+      });
+
+      it("should not mask Bearer tokens when maskBearerTokens is false", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskBearerTokens: false,
+        };
+        const bearerToken = "Bearer mytoken123";
+        expect(maskWithConfig(bearerToken, config)).toBe(bearerToken);
+      });
+
+      it("should mask passwords when maskPasswords is true", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskPasswords: true,
+        };
+        const password = "password=secret123";
+        expect(maskWithConfig(password, config)).toBe("****");
+      });
+
+      it("should not mask passwords when maskPasswords is false", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskPasswords: false,
+        };
+        const password = "password=secret123";
+        expect(maskWithConfig(password, config)).toBe(password);
+      });
+
+      it("should mask generic secrets when maskGenericSecrets is true", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskGenericSecrets: true,
+        };
+        const secret = "api_key=abc123";
+        expect(maskWithConfig(secret, config)).toBe("****");
+      });
+
+      it("should not mask generic secrets when maskGenericSecrets is false", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskGenericSecrets: false,
+        };
+        const secret = "api_key=abc123";
+        expect(maskWithConfig(secret, config)).toBe(secret);
+      });
+
+      it("should handle mixed content with selective API key masking", () => {
+        const config: MaskingConfig = {
+          ...defaultMaskingConfig,
+          enabled: true,
+          maskApiKeys: true,
+          maskBearerTokens: false,
+          maskPasswords: true,
+          maskGenericSecrets: false,
+        };
+        const mixed = "OpenAI: sk-abc123def456ghi789jkl012mno345pqr678 Bearer token123 password=secret api_key=test";
+        const masked = maskWithConfig(mixed, config);
+        expect(masked).toContain("****"); // OpenAI key masked
+        expect(masked).toContain("Bearer token123"); // Bearer not masked
+        expect(masked).toContain("api_key=test"); // Generic secret not masked
+      });
+    });
+
+    describe("No False Positives", () => {
+      it("should not mask short strings that look like key prefixes", () => {
+        expect(maskString("sk-short")).toBe("sk-short"); // Too short for OpenAI key
+        expect(maskString("ghp_short")).toBe("ghp_short"); // Too short for GitHub token
+      });
+
+      it("should not mask legitimate content that resembles patterns", () => {
+        expect(maskString("The skeleton key")).toBe("The skeleton key");
+        expect(maskString("GitHub page")).toBe("GitHub page");
+      });
+
+      it("should mask bearer-like patterns (security preference)", () => {
+        // Note: "bearer" followed by space and word will match Bearer token pattern
+        // This is intentional - better to over-mask than under-mask for security
+        expect(maskString("bearer of bad news")).toBe("**** bad news");
+      });
+
+      it("should not mask partial matches", () => {
+        expect(maskString("AKIA")).toBe("AKIA"); // Too short for AWS key
+        expect(maskString("AIza")).toBe("AIza"); // Too short for Google key
+      });
     });
   });
 

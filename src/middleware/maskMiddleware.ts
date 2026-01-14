@@ -14,6 +14,8 @@ export interface LogEntry {
   timestamp: string;
   data?: any;
   meta?: any;
+  /** Optional correlation ID for request tracing */
+  correlationId?: string;
   [key: string]: any;
 }
 
