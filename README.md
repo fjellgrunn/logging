@@ -30,6 +30,40 @@ This logging library is optimized for high-volume trace logging in production en
 
 See [PERFORMANCE_IMPROVEMENTS.md](./PERFORMANCE_IMPROVEMENTS.md) for detailed performance information.
 
+### 🔐 Sensitive Data Masking
+
+Automatically detect and mask sensitive data in your logs:
+- **PII Protection**: Email addresses, SSNs
+- **API Keys**: OpenAI, Anthropic, AWS, GitHub, GitLab, Slack, Google Cloud
+- **Secrets**: Passwords, Bearer tokens, generic secret patterns
+- **Cryptographic**: Private keys, JWTs, large base64 blobs
+
+```typescript
+import { maskWithConfig } from '@fjell/logging';
+
+const config = { enabled: true, maskApiKeys: true, maskPasswords: true };
+const masked = maskWithConfig('API key: sk-abc123...xyz password=secret', config);
+// Output: "API key: **** ****"
+```
+
+See [MASKING.md](./MASKING.md) for detailed documentation.
+
+### 🔗 Correlation ID Support
+
+Track requests across distributed systems with correlation IDs:
+
+```typescript
+import { createCorrelatedLogger, generateCorrelationId } from '@fjell/logging';
+
+const correlationId = generateCorrelationId();
+const logger = createCorrelatedLogger(baseLogger, correlationId);
+
+logger.info('Processing request');
+// Output: [lq2x5k-abc123] Processing request
+```
+
+See [docs/CORRELATION.md](./docs/CORRELATION.md) for usage patterns and best practices.
+
 ## How do I install it?
 
 `yarn add @fjell/logging`
