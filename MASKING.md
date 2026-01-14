@@ -35,6 +35,30 @@ The masking system is designed to be:
 - Both formatted (123-45-6789) and unformatted (123456789) SSNs
 - Configurable on/off
 
+### API Keys and Secrets
+
+When masking is enabled, the following API keys and secrets are automatically detected:
+
+#### LLM Provider Keys
+- **OpenAI**: `sk-*`, `sk-proj-*`
+- **Anthropic**: `sk-ant-*`
+
+#### Cloud Provider Keys
+- **AWS**: `AKIA*` (access keys)
+- **Google Cloud**: `AIza*`
+
+#### Platform Tokens
+- **GitHub**: `ghp_*`, `gho_*`, `ghs_*`, `ghu_*`
+- **GitLab**: `glpat-*`
+- **Slack**: `xox*-*` (bot, app, user tokens)
+
+#### Generic Patterns
+- `api_key=`, `api-key=`, `apikey=`
+- `password=`
+- `secret=`
+- `token=`
+- `Bearer` tokens
+
 ## Configuration
 
 The masking system is **disabled by default** and must be explicitly enabled. This ensures zero performance impact for users who don't need masking.
@@ -58,7 +82,12 @@ const config = {
     maskPrivateKeys: true,            // Mask private keys (default: true)
     maskBase64Blobs: true,            // Mask long base64 (default: true)
     maskJWTs: true,                   // Mask JWT tokens (default: true)
-    maxDepth: 8                       // Max recursion depth (default: 8)
+    maxDepth: 8,                      // Max recursion depth (default: 8)
+    // New API key and secret masking options
+    maskApiKeys: true,                // Mask API keys (default: true)
+    maskBearerTokens: true,           // Mask Bearer tokens (default: true)
+    maskPasswords: true,              // Mask password patterns (default: true)
+    maskGenericSecrets: true          // Mask generic secrets (default: true)
   }
 };
 ```

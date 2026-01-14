@@ -1,6 +1,6 @@
 /**
  * Sensitive data masking utilities for logging
- * Detects and replaces PII, private keys, and other sensitive information with '****'
+ * Detects and replaces PII, private keys, API keys, and other sensitive information with '****'
  */
 
 // Regex patterns for sensitive data detection
@@ -18,6 +18,49 @@ const JWT_PATTERN = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
 const EMAIL_PATTERN = /\b[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.[A-Za-z]{2,}\b/g;
 
 const SSN_PATTERN = /\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b/g;
+
+// API Key patterns for various providers
+const API_KEY_PATTERNS = [
+  // OpenAI
+  /sk-[a-zA-Z0-9]{20,}/g,
+  /sk-proj-[a-zA-Z0-9_-]+/g,
+
+  // Anthropic
+  /sk-ant-[a-zA-Z0-9_-]+/g,
+
+  // AWS Access Keys
+  /AKIA[0-9A-Z]{16}/g,
+
+  // GitHub tokens
+  /ghp_[a-zA-Z0-9]{36}/g,
+  /gho_[a-zA-Z0-9]{36}/g,
+  /ghs_[a-zA-Z0-9]{36}/g,
+  /ghu_[a-zA-Z0-9]{36}/g,
+
+  // GitLab tokens
+  /glpat-[a-zA-Z0-9_-]{20}/g,
+
+  // Slack tokens
+  /xox[baprs]-[a-zA-Z0-9-]+/g,
+
+  // Google Cloud API keys
+  /AIza[0-9A-Za-z_-]{35}/g,
+];
+
+// Bearer token pattern
+const BEARER_TOKEN_PATTERN = /Bearer\s+[\w.-]+/gi;
+
+// Password patterns (key=value style)
+const PASSWORD_PATTERNS = [
+  /password[\s:="']+[^\s"']+/gi,
+];
+
+// Generic secret patterns (key=value style)
+const GENERIC_SECRET_PATTERNS = [
+  /api[_-]?key[\s:="']+[\w-]+/gi,
+  /secret[\s:="']+[^\s"']+/gi,
+  /token[\s:="']+[^\s"']+/gi,
+];
 
 // Maximum string length to process for regex patterns (security limit)
 const MAX_STRING_LENGTH = 100000;
@@ -58,11 +101,29 @@ export function maskString(input: string): string {
     }
   }
 
-  // Mask email addresses (optional, configurable)
+  // Mask email addresses
   masked = masked.replace(EMAIL_PATTERN, '****');
 
-  // Mask SSNs (optional, configurable)
+  // Mask SSNs
   masked = masked.replace(SSN_PATTERN, '****');
+
+  // Mask API keys (various providers)
+  for (const pattern of API_KEY_PATTERNS) {
+    masked = masked.replace(pattern, '****');
+  }
+
+  // Mask Bearer tokens
+  masked = masked.replace(BEARER_TOKEN_PATTERN, '****');
+
+  // Mask passwords
+  for (const pattern of PASSWORD_PATTERNS) {
+    masked = masked.replace(pattern, '****');
+  }
+
+  // Mask generic secrets
+  for (const pattern of GENERIC_SECRET_PATTERNS) {
+    masked = masked.replace(pattern, '****');
+  }
 
   return masked;
 }
@@ -128,6 +189,14 @@ export interface MaskingConfig {
   maskJWTs: boolean;
   /** Maximum recursion depth for object masking */
   maxDepth: number;
+  /** Mask API keys (OpenAI, Anthropic, AWS, GitHub, GitLab, Slack, Google Cloud) */
+  maskApiKeys: boolean;
+  /** Mask Bearer tokens */
+  maskBearerTokens: boolean;
+  /** Mask passwords (password=value patterns) */
+  maskPasswords: boolean;
+  /** Mask generic secrets (api_key=, secret=, token= patterns) */
+  maskGenericSecrets: boolean;
 }
 
 /**
@@ -141,6 +210,11 @@ export const defaultMaskingConfig: MaskingConfig = {
   maskBase64Blobs: true,
   maskJWTs: true,
   maxDepth: 8,
+  // New security-focused defaults (all true when masking is enabled)
+  maskApiKeys: true,
+  maskBearerTokens: true,
+  maskPasswords: true,
+  maskGenericSecrets: true,
 };
 
 /**
@@ -197,6 +271,29 @@ export function maskWithConfig<T>(
 
     if (config.maskSSNs) {
       masked = masked.replace(SSN_PATTERN, '****');
+    }
+
+    // Apply new API key and secret masking rules
+    if (config.maskApiKeys) {
+      for (const pattern of API_KEY_PATTERNS) {
+        masked = masked.replace(pattern, '****');
+      }
+    }
+
+    if (config.maskBearerTokens) {
+      masked = masked.replace(BEARER_TOKEN_PATTERN, '****');
+    }
+
+    if (config.maskPasswords) {
+      for (const pattern of PASSWORD_PATTERNS) {
+        masked = masked.replace(pattern, '****');
+      }
+    }
+
+    if (config.maskGenericSecrets) {
+      for (const pattern of GENERIC_SECRET_PATTERNS) {
+        masked = masked.replace(pattern, '****');
+      }
     }
 
     return masked;
