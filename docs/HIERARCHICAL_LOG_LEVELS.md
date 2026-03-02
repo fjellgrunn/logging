@@ -224,3 +224,14 @@ if (level === LogLevel.DEBUG) {
 3. **Use Environment Variables**: Configure logging through environment variables for production
 4. **Document Components**: Document the component hierarchy in your package for easier configuration
 5. **Clean Up**: Remove debug-level component overrides when debugging is complete
+
+## Validation and Testing
+
+Hierarchical configuration behavior is covered in test suites, including:
+
+- nested component resolution
+- inheritance from parent components
+- multi-branch configurations
+- deeper hierarchy scenarios and stress cases
+
+See `tests/config.test.ts` and `tests/logging.test.ts` for concrete cases.

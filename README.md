@@ -18,7 +18,7 @@ circular.self = circular;
 logger.info('No crash!', circular);  // ✓ Safe - outputs: {"name":"user","self":"(circular)"}
 ```
 
-See [CIRCULAR_REFERENCE_PROTECTION.md](./CIRCULAR_REFERENCE_PROTECTION.md) for details and examples.
+See [docs/CIRCULAR_REFERENCE_PROTECTION.md](./docs/CIRCULAR_REFERENCE_PROTECTION.md) for details and examples.
 
 ### ⚡ Performance Optimized
 
@@ -46,7 +46,7 @@ const masked = maskWithConfig('API key: sk-abc123...xyz password=secret', config
 // Output: "API key: **** ****"
 ```
 
-See [MASKING.md](./MASKING.md) for detailed documentation.
+See [docs/MASKING.md](./docs/MASKING.md) for detailed documentation.
 
 ### 🔗 Correlation ID Support
 

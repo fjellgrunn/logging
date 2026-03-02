@@ -1,5 +1,13 @@
 Fjell Logging is just another logging library and it's designed to as straightforward as possible.
 
+## Additional Documentation
+
+- [Correlation IDs](./CORRELATION.md)
+- [Hierarchical Log Levels](./HIERARCHICAL_LOG_LEVELS.md)
+- [Circular Reference Protection](./CIRCULAR_REFERENCE_PROTECTION.md)
+- [Sensitive Data Masking](./MASKING.md)
+- [Error Handling and Resilience](./ERROR_HANDLING.md)
+
 ## Why another logging library?
 
 The original author was getting really tired of the existing logging libraries and the level of complexity they added to the codebase.
