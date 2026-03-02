@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Circular Reference Protection
+- Circular-safe serialization for log payloads
+- Safe handling for circular objects in both `TEXT` and `STRUCTURED` formats
+- Fallback behavior to prevent `TypeError: Converting circular structure to JSON` from crashing applications
+
 #### API Key and Secret Masking
 - API key masking for major providers:
   - **OpenAI**: `sk-*`, `sk-proj-*`
@@ -37,8 +42,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional `correlationId` field in `LogEntry` interface
 - Optional `withCorrelationId()` and `getCorrelationId()` methods in `Logger` interface
 
+#### Hierarchical Component Log Levels
+- Recursive component-level overrides for package log configuration
+- Resolution of effective log level by component path depth
+- Component inheritance when specific sub-components are not configured
+
 ### Documentation
-- Updated MASKING.md with API key and secret masking documentation
+- Added `docs/CIRCULAR_REFERENCE_PROTECTION.md`
+- Added `docs/ERROR_HANDLING.md`
+- Added `docs/MASKING.md`
 - Added docs/CORRELATION.md with correlation ID usage patterns
-- Updated README.md with new feature highlights
+- Updated docs/HIERARCHICAL_LOG_LEVELS.md with validation notes
+- Updated README.md with docs links for masking and circular-safety topics
 
