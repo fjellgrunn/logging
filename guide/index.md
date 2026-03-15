@@ -1,26 +1,30 @@
-# Fjell Logging for LLM Apps
+# @fjell/logging - Agentic Guide
 
-This guide focuses on using `@fjell/logging` in AI and agent workflows where you need good observability without leaking sensitive prompt data.
+## Purpose
 
-## Start Here
+Structured logging, format control, and middleware utilities for Fjell applications.
 
-- [LLM Logging Basics](./llm-logging-basics.md) - Setup, levels, and component naming for model workflows
-- [Request Tracing with Correlation IDs](./llm-request-tracing.md) - Track a single request across orchestration steps and services
-- [Prompt Safety and Data Masking](./llm-safety-and-masking.md) - Protect keys, tokens, and user data in logs
+This guide is optimized for AI-assisted code generation and integration workflows.
 
-## Why This Matters for LLM Systems
+## Documentation
 
-LLM applications can be hard to debug because failures are often distributed across retrieval, prompt construction, model calls, parsing, and tool execution. Good logs should answer:
+- **[Usage Guide](./usage.md)** - API-oriented usage patterns and model-safe examples
+- **[Integration Guide](./integration.md)** - Architecture placement, composition rules, and implementation guidance
 
-- Which request failed?
-- Which model and settings were used?
-- Where did latency spike?
-- Was sensitive data protected?
+## Key Capabilities
 
-`@fjell/logging` gives you:
+- Provides configurable logger creation with level and format controls
+- Includes safe formatting/inspection helpers for resilient logging
+- Offers middleware utilities including masking support for sensitive data
 
-- Hierarchical component loggers (`logger.get(...)`) for clear pipeline stages
-- Correlation ID helpers for end-to-end request tracing
-- Configurable masking support for sensitive values
-- Structured output mode for log ingestion systems
+## Installation
 
+```bash
+npm install @fjell/logging
+```
+
+## Public API Highlights
+
+- `getLogger` plus `Logger` and `TimeLogger` types
+- `resolveLogLevel` and logging config types
+- `safeFormat`, `safeInspect`, `stringifyJSON`, and middleware exports

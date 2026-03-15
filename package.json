@@ -18,7 +18,8 @@
   },
   "browser": "./dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "guide"
   ],
   "keywords": [
     "logging",
