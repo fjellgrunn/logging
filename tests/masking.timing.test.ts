@@ -207,10 +207,11 @@ describe('Masking Timing', () => {
     console.log(`  Overhead per call: ${((durationDisabled - durationNoCall) / iterations * 1000).toFixed(4)} microseconds`);
 
     const overheadPercentage = ((durationDisabled - durationNoCall) / durationNoCall) * 100;
+    const overheadPerCallUs = ((durationDisabled - durationNoCall) / iterations) * 1000;
     console.log(`  Overhead percentage: ${overheadPercentage.toFixed(2)}%`);
 
-    // Disabled masking should have reasonable overhead (function call overhead)
-    expect(overheadPercentage).toBeLessThan(1000); // Allow for function call overhead
+    // Percentage is unstable when baseline is tiny; assert absolute overhead instead.
+    expect(overheadPerCallUs).toBeLessThan(10);
   });
 
   it('should measure the performance impact of different masking configurations', () => {
@@ -260,9 +261,10 @@ describe('Masking Timing', () => {
     console.log(`  Difference per call: ${((durationFull - durationMinimal) / iterations * 1000).toFixed(4)} microseconds`);
 
     const differencePercentage = ((durationFull - durationMinimal) / durationMinimal) * 100;
+    const differencePerCallUs = ((durationFull - durationMinimal) / iterations) * 1000;
     console.log(`  Difference percentage: ${differencePercentage.toFixed(2)}%`);
 
-    // Full masking should not be dramatically slower than minimal masking
-    expect(differencePercentage).toBeLessThan(100); // Should not be more than 100% slower
+    // Percentage is unstable when minimal config runs very fast; check absolute delta.
+    expect(differencePerCallUs).toBeLessThan(25);
   });
 });
