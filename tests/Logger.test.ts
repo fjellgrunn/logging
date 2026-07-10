@@ -316,6 +316,7 @@ describe('Logger', () => {
     });
 
     it('should handle very short timeframe for suppression count edge case', () => {
+      vi.useFakeTimers();
       const floodControlConfig: FloodControlConfig = {
         enabled: true,
         threshold: 1, // Very low threshold
@@ -332,26 +333,107 @@ describe('Logger', () => {
         { asyncLogging: false }
       );
 
-      // Send messages rapidly to trigger suppression
       logger.info('Rapid message');
       logger.info('Rapid message'); // Should trigger suppression with count = 1
 
-      // Wait a bit for the timeframe to expire
-      return new Promise(resolve => {
-        setTimeout(() => {
-          // Send another message - should resume logging
-          logger.info('Rapid message');
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Started suppressing repeated log message')
+      );
 
-          // Check if we got the suppression notice
-          const logCalls = mockConsole.log.mock.calls;
-          const hasSuppressionNotice = logCalls.some((call: any) =>
-            call[0].includes('Started suppressing repeated log message')
-          );
+      vi.advanceTimersByTime(10);
+      logger.info('Rapid message'); // resume
 
-          expect(hasSuppressionNotice).toBe(true);
-          resolve(null);
-        }, 50);
-      });
+      const resumeCall = mockConsole.log.mock.calls.find((call: any) =>
+        typeof call[0] === 'string' && call[0].includes('Stopped suppressing repeated log message')
+      );
+      expect(resumeCall).toBeDefined();
+      expect(resumeCall![0]).toContain('Suppressed 1 times');
+
+      logger.destroy();
+      vi.useRealTimers();
+    });
+
+    it('should report non-zero suppressed count when resuming after multiple suppressions', () => {
+      vi.useFakeTimers();
+      const floodControlConfig: FloodControlConfig = {
+        enabled: true,
+        threshold: 1,
+        timeframe: 1000,
+      };
+
+      const logger = createLogger(
+        LogFormat.TEXT,
+        LogLevel.DEBUG,
+        { category: 'test', components: [] },
+        floodControlConfig,
+        undefined,
+        undefined,
+        { asyncLogging: false }
+      );
+
+      logger.info('Flood');
+      logger.info('Flood'); // suppress count 1 + start notice
+      logger.info('Flood'); // suppress count 2
+      logger.info('Flood'); // suppress count 3
+
+      vi.advanceTimersByTime(1000);
+      logger.info('Flood'); // resume
+
+      const resumeCall = mockConsole.log.mock.calls.find((call: any) =>
+        typeof call[0] === 'string' && call[0].includes('Stopped suppressing repeated log message')
+      );
+      expect(resumeCall).toBeDefined();
+      expect(resumeCall![0]).toContain('Suppressed 3 times');
+
+      logger.destroy();
+      vi.useRealTimers();
+    });
+
+    it('should emit suppress notice when masking is enabled (hash must use masked values)', () => {
+      const floodControlConfig: FloodControlConfig = {
+        enabled: true,
+        threshold: 1,
+        timeframe: 1000,
+      };
+
+      const loggingConfig = {
+        logFormat: LogFormat.TEXT,
+        logLevel: LogLevel.DEBUG,
+        overrides: {},
+        floodControl: floodControlConfig,
+        masking: {
+          enabled: true,
+          maskEmails: true,
+          maskSSNs: false,
+          maskPrivateKeys: false,
+          maskBase64Blobs: false,
+          maskJWTs: false,
+          maxDepth: 8,
+          maskApiKeys: false,
+          maskBearerTokens: false,
+          maskPasswords: false,
+          maskGenericSecrets: false,
+        },
+      };
+
+      const logger = createLogger(
+        LogFormat.TEXT,
+        LogLevel.DEBUG,
+        { category: 'test', components: [] },
+        floodControlConfig,
+        loggingConfig as any,
+        undefined,
+        { asyncLogging: false }
+      );
+
+      logger.info('Contact user@example.com');
+      logger.info('Contact user@example.com'); // should suppress and emit start notice
+
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Started suppressing repeated log message')
+      );
+
+      logger.destroy();
     });
   });
 

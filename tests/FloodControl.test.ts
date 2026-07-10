@@ -333,6 +333,26 @@ describe('FloodControl', () => {
       expect(floodControl.getSuppressedCount('test message', [])).toBe(0);
     });
 
+    it('should preserve suppressed count via getLastResumeSuppressedCount after resume', () => {
+      const floodControl = new FloodControl(config);
+
+      floodControl.check('test message', []);
+      floodControl.check('test message', []);
+      floodControl.check('test message', []);
+      floodControl.check('test message', []); // suppress count 1
+      floodControl.check('test message', []); // suppress count 2
+      floodControl.check('test message', []); // suppress count 3
+
+      expect(floodControl.getSuppressedCount('test message', [])).toBe(3);
+
+      vi.advanceTimersByTime(config.timeframe);
+
+      expect(floodControl.check('test message', [])).toBe('resume');
+      // Entry cleared, but last resume count is preserved for Logger messaging
+      expect(floodControl.getSuppressedCount('test message', [])).toBe(0);
+      expect(floodControl.getLastResumeSuppressedCount()).toBe(3);
+    });
+
     it('should handle different data arrays correctly', () => {
       const floodControl = new FloodControl(config);
 

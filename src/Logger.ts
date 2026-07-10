@@ -5,6 +5,7 @@ import { createWriter, WriterOptions } from "./Writer";
 import { createFormatter } from "./formatter";
 import { FloodControl, FloodControlConfig } from "./FloodControl";
 import { LoggingConfig, resolveLogLevel } from "./config";
+import { maskWithConfig } from "./utils/maskSensitive";
 
 export interface TimeLogger {
   end: () => void;
@@ -147,8 +148,16 @@ export const createLogger = (
       return;
     }
 
-    const check = floodControl ? floodControl.check(message, data) : 'log';
-    const payload = { message, data };
+    // Apply opt-in masking when enabled in logging config
+    let maskedMessage = message;
+    let maskedData = data;
+    if (loggingConfig?.masking?.enabled) {
+      maskedMessage = maskWithConfig(message, loggingConfig.masking);
+      maskedData = data.map((item) => maskWithConfig(item, loggingConfig.masking));
+    }
+
+    const check = floodControl ? floodControl.check(maskedMessage, maskedData) : 'log';
+    const payload = { message: maskedMessage, data: maskedData };
 
     // Use async logging to prevent blocking the event loop
     const asyncWrite = () => {
@@ -165,7 +174,8 @@ export const createLogger = (
           case 'suppress':
             // The first time we suppress, we could log a message.
             // For now, we do nothing. The requirement is to just dial-down.
-            if (floodControl && floodControl.getSuppressedCount(message, data) === 1) {
+            // Must use masked message/data — same inputs floodControl.check() hashed.
+            if (floodControl && floodControl.getSuppressedCount(maskedMessage, maskedData) === 1) {
               try {
                 const originalLevel = level;
                 const newPayload = { message: `Started suppressing repeated log message`, data: [] };
@@ -177,7 +187,8 @@ export const createLogger = (
             break;
           case 'resume': {
             try {
-              const count = floodControl ? floodControl.getSuppressedCount(message, data) : 0;
+              // getSuppressedCount is 0 after resume (entry cleared); use captured count
+              const count = floodControl ? floodControl.getLastResumeSuppressedCount() : 0;
               const resumePayload = {
                 message: `Stopped suppressing repeated log message. Suppressed ${count} times.`,
                 data: []

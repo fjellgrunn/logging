@@ -23,6 +23,8 @@ export class FloodControl {
   private history: Map<string, number[]> = new Map();
   private suppressed: Map<string, { count: number, firstTimestamp: number, summaryLogged: boolean }> = new Map();
   private cleanupTimer: NodeJS.Timeout | null = null;
+  /** Count captured when check() last returned 'resume' (entry is cleared before return). */
+  private lastResumeSuppressedCount = 0;
 
   constructor(config: FloodControlConfig) {
     this.config = config;
@@ -78,6 +80,8 @@ export class FloodControl {
       }
     } else {
       if (this.suppressed.has(messageHash)) {
+        // Preserve count for Logger resume messaging before clearing the entry
+        this.lastResumeSuppressedCount = this.suppressed.get(messageHash)!.count;
         this.suppressed.delete(messageHash);
         return 'resume';
       }
@@ -89,5 +93,13 @@ export class FloodControl {
   public getSuppressedCount(message: string, data: any[]): number {
     const messageHash = hash(message, data);
     return this.suppressed.get(messageHash)?.count || 0;
+  }
+
+  /**
+   * Returns the suppressed-message count from the most recent 'resume' action.
+   * Use this after check() returns 'resume' — getSuppressedCount() is already 0 then.
+   */
+  public getLastResumeSuppressedCount(): number {
+    return this.lastResumeSuppressedCount;
   }
 }
