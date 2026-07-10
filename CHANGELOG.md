@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> Phase 4 will promote the shipped items below into the release section. Recent quality fixes: async logging is no longer hard-disabled outside tests; masking applies on the default write path when `masking.enabled` is true (still off by default).
+## [4.4.73] - 2026-07-10
 
 ### Added
 
@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `maskBearerTokens` - Mask Bearer tokens (default: true)
   - `maskPasswords` - Mask password patterns (default: true)
   - `maskGenericSecrets` - Mask generic secrets (default: true)
+- Masking applies on the default write path when `masking.enabled` is true (still off by default)
 
 #### Correlation ID Support
 - `CorrelatedLogger` class for wrapping loggers with correlation ID prefixes
@@ -48,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recursive component-level overrides for package log configuration
 - Resolution of effective log level by component path depth
 - Component inheritance when specific sub-components are not configured
+
+### Fixed
+- Async logging is no longer hard-disabled outside tests
 
 ### Documentation
 - Added `docs/CIRCULAR_REFERENCE_PROTECTION.md`
