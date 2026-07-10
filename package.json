@@ -51,7 +51,7 @@
     "@typescript-eslint/parser": "^8.63.0",
     "@vitest/coverage-v8": "^4.1.10",
     "concurrently": "^9.2.3",
-    "esbuild": "0.25.11",
+    "esbuild": "0.28.1",
     "eslint": "^9.39.4",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
