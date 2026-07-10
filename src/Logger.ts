@@ -174,7 +174,8 @@ export const createLogger = (
           case 'suppress':
             // The first time we suppress, we could log a message.
             // For now, we do nothing. The requirement is to just dial-down.
-            if (floodControl && floodControl.getSuppressedCount(message, data) === 1) {
+            // Must use masked message/data — same inputs floodControl.check() hashed.
+            if (floodControl && floodControl.getSuppressedCount(maskedMessage, maskedData) === 1) {
               try {
                 const originalLevel = level;
                 const newPayload = { message: `Started suppressing repeated log message`, data: [] };
@@ -186,7 +187,8 @@ export const createLogger = (
             break;
           case 'resume': {
             try {
-              const count = floodControl ? floodControl.getSuppressedCount(message, data) : 0;
+              // getSuppressedCount is 0 after resume (entry cleared); use captured count
+              const count = floodControl ? floodControl.getLastResumeSuppressedCount() : 0;
               const resumePayload = {
                 message: `Stopped suppressing repeated log message. Suppressed ${count} times.`,
                 data: []
