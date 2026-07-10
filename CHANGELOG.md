@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> Phase 4 will promote the shipped items below into the release section. Recent quality fixes: async logging is no longer hard-disabled outside tests; masking applies on the default write path when `masking.enabled` is true (still off by default).
+
 ### Added
 
 #### Circular Reference Protection

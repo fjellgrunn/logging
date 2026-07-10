@@ -5,6 +5,7 @@ import { createWriter, WriterOptions } from "./Writer";
 import { createFormatter } from "./formatter";
 import { FloodControl, FloodControlConfig } from "./FloodControl";
 import { LoggingConfig, resolveLogLevel } from "./config";
+import { maskWithConfig } from "./utils/maskSensitive";
 
 export interface TimeLogger {
   end: () => void;
@@ -147,8 +148,16 @@ export const createLogger = (
       return;
     }
 
-    const check = floodControl ? floodControl.check(message, data) : 'log';
-    const payload = { message, data };
+    // Apply opt-in masking when enabled in logging config
+    let maskedMessage = message;
+    let maskedData = data;
+    if (loggingConfig?.masking?.enabled) {
+      maskedMessage = maskWithConfig(message, loggingConfig.masking);
+      maskedData = data.map((item) => maskWithConfig(item, loggingConfig.masking));
+    }
+
+    const check = floodControl ? floodControl.check(maskedMessage, maskedData) : 'log';
+    const payload = { message: maskedMessage, data: maskedData };
 
     // Use async logging to prevent blocking the event loop
     const asyncWrite = () => {

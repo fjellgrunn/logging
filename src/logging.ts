@@ -1,6 +1,17 @@
 import { configureLogging, LoggingConfig, resolveLogLevel } from "./config";
 import { createLogger, Logger } from "./Logger";
 
+const isTestEnvironment = (): boolean => {
+  if (typeof process === "undefined" || !process.env) {
+    return false;
+  }
+  return (
+    process.env.VITEST === "true" ||
+    process.env.NODE_ENV === "test" ||
+    typeof process.env.VITEST_WORKER_ID !== "undefined"
+  );
+};
+
 export const getLogger = (name: string): Logger => {
   const config = configureLogging();
   const logger = createBaseLogger(name, config);
@@ -14,12 +25,9 @@ const createBaseLogger = (name: string, config: LoggingConfig): Logger => {
   // Resolve the log level for this category
   const logLevel = resolveLogLevel(config, name, []);
   
-  // Check if we're in a test environment to disable async logging
-  // For now, always disable async logging to maintain test compatibility
-  // In production, this can be controlled via environment variables
-  const isTestEnvironment = true; // Temporarily disable async logging for tests
-  
+  // Disable async logging in test environments so assertions see writes immediately.
+  // Production defaults to async logging (setImmediate / setTimeout fallback).
   return createLogger(logFormat, logLevel, coordinates, floodControl, config, void 0, {
-    asyncLogging: !isTestEnvironment
+    asyncLogging: !isTestEnvironment()
   });
 };

@@ -5,7 +5,9 @@
 ## Default Model
 
 - Masking is **disabled by default**
-- Enable it explicitly through logging configuration
+- Enable it explicitly through logging configuration (`LOGGING_CONFIG.masking.enabled` or `configureLogging({ masking: { enabled: true } })`)
+- When enabled, the default `getLogger` / `createLogger` write path masks message and data before formatting
+- Standalone helpers (`maskWithConfig`, `maskLogEntry`, middleware) remain available for manual use
 - Rules are configured at the logging-system level
 
 ## Data Types Covered

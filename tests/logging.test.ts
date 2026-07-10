@@ -1313,3 +1313,46 @@ describe('Logging', () => {
     });
   });
 });
+
+describe('getLogger production defaults', () => {
+  it('enables async logging outside test environments', async () => {
+    const originalEnv = { ...process.env };
+    delete process.env.VITEST;
+    delete process.env.VITEST_WORKER_ID;
+    process.env.NODE_ENV = 'production';
+    process.env.LOG_LEVEL = 'INFO';
+    process.env.LOGGING_CONFIG = '';
+
+    vi.resetModules();
+    const setImmediateSpy = vi.spyOn(global, 'setImmediate');
+    console.log = vi.fn();
+
+    const { getLogger: getProdLogger } = await import('../src/logging');
+    const logger = getProdLogger('prodCategory');
+    logger.info('async path message');
+
+    expect(setImmediateSpy).toHaveBeenCalled();
+
+    await new Promise<void>((resolve) => setImmediate(() => resolve()));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('async path message'));
+
+    setImmediateSpy.mockRestore();
+    process.env = originalEnv;
+    vi.resetModules();
+  });
+
+  it('applies masking on the default write path when enabled', () => {
+    process.env.LOG_LEVEL = 'INFO';
+    process.env.LOGGING_CONFIG = JSON.stringify({
+      masking: { enabled: true, maskEmails: true, maskPasswords: true },
+    });
+
+    console.log = vi.fn();
+    const logger = getLogger('maskCategory');
+    logger.info('contact user@example.com password=secret');
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('****'));
+    expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('user@example.com'));
+    expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('password=secret'));
+  });
+});

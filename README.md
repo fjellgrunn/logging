@@ -28,11 +28,12 @@ This logging library is optimized for high-volume trace logging in production en
 - **Trace level buffering** reduces I/O operations
 - **Early exit optimization** eliminates unnecessary processing
 
-See [PERFORMANCE_IMPROVEMENTS.md](./PERFORMANCE_IMPROVEMENTS.md) for detailed performance information.
+Async logging and buffering are enabled by default outside test environments; see the Key Features notes above for the production behavior.
 
 ### 🔐 Sensitive Data Masking
 
-Automatically detect and mask sensitive data in your logs:
+Masking is **opt-in** (`masking.enabled` defaults to `false`). When enabled via `LOGGING_CONFIG`, the default `getLogger` write path applies masking to messages and data. You can also call the utilities directly:
+
 - **PII Protection**: Email addresses, SSNs
 - **API Keys**: OpenAI, Anthropic, AWS, GitHub, GitLab, Slack, Google Cloud
 - **Secrets**: Passwords, Bearer tokens, generic secret patterns
@@ -46,7 +47,7 @@ const masked = maskWithConfig('API key: sk-abc123...xyz password=secret', config
 // Output: "API key: **** ****"
 ```
 
-See [docs/MASKING.md](./docs/MASKING.md) for detailed documentation.
+See [docs/MASKING.md](./docs/MASKING.md) for configuration and write-path behavior.
 
 ### 🔗 Correlation ID Support
 
@@ -66,7 +67,7 @@ See [docs/CORRELATION.md](./docs/CORRELATION.md) for usage patterns and best pra
 
 ## How do I install it?
 
-`yarn add @fjell/logging`
+`npm install @fjell/logging`
 
 Then create an environment variable called `LOGGING_CONFIG` and configure it as follows:
 
